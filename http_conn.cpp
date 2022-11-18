@@ -148,7 +148,7 @@ http_conn::HTTP_CODE http_conn::process_read()
     HTTP_CODE ret = NO_REQUEST;
 
     char *text = 0;
-
+    
     while (((m_check_state == CHECK_STATE_CONTENT) && (line_status == LINE_OK)) || ((line_status = parse_line()) == LINE_OK))
     {
         // 解析到了一行完整的数据，或者解析到了请求体，也是完整的数据
