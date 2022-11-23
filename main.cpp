@@ -150,7 +150,31 @@ int main(int argc, char *argv[])
             {
                 if (users[sockfd].read())
                 {
-                    // 一次性把所有数据都读完
+                    // 此时利用read一次性把所有数据都读完
+                    // 然后把连接添加到线程池中
+                    // 处理连接
+                    // 这里仅仅是把这些数据全部读到了缓冲区中
+                    /*
+                    GET / HTTP/1.1
+                    Host: www.baidu.com
+                    User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0
+                    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,/;q=0.8
+                    Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
+                    Accept-Encoding: gzip, deflate, br
+                    Connection: keep-alive
+                    Cookie: BAIDUID=6729CB682DADC2CF738F533E35162D98:FG=1;
+                    BIDUPSID=6729CB682DADC2CFE015A8099199557E; PSTM=1614320692; BD_UPN=13314752;
+                    BDORZ=FFFB88E999055A3F8A630C64834BD6D0;
+                    __yjs_duid=1_d05d52b14af4a339210722080a668ec21614320694782; BD_HOME=1;
+                    H_PS_PSSID=33514_33257_33273_31660_33570_26350;
+                    BA_HECTOR=8h2001alag0lag85nk1g3hcm60q
+                    Upgrade-Insecure-Requests: 1
+                    Cache-Control: max-age=0
+                    */
+                    // 接下来需要在线程池中做的是
+                    // 解析这些数据
+                    // 把这些数据打印到shell
+                    // 生成响应，回复给客户端
                     pool->append(users + sockfd);
                 }
                 else

@@ -86,6 +86,9 @@ void http_conn::init(int sockfd, const sockaddr_in &addr)
 
 void http_conn::init()
 {
+    bytes_to_send = 0;
+    bytes_hava_send = 0;
+    
     m_check_state = CHECK_STATE_REQUESTLINE; // 初始状态为检查请求行
     m_linger = false;                        // 默认不保持链接  Connection : keep-alive保持连接
 
@@ -280,7 +283,7 @@ http_conn::HTTP_CODE http_conn::parse_content(char *text)
 http_conn::HTTP_CODE http_conn::process_read()
 {
     LINE_STATUS line_status = LINE_OK;
-    HTTP_CODE ret = NO_REQUEST;
+    HTTP_CODE ret = NO_REQUEST; // NO_REQUEST表示请求不完整，就是数据还没读完
     char *text = 0;
     while (((m_check_state == CHECK_STATE_CONTENT) && (line_status == LINE_OK)) || ((line_status = parse_line()) == LINE_OK))
     {
@@ -337,7 +340,7 @@ http_conn::HTTP_CODE http_conn::process_read()
 // 映射到内存地址m_file_address处，并告诉调用者获取文件成功
 http_conn::HTTP_CODE http_conn::do_request()
 {
-    // "/home/nowcoder/webserver/resources"
+    // doc_root = "/home/nowcoder/webserver/resources"
     strcpy(m_real_file, doc_root);
     int len = strlen(doc_root);
     strncpy(m_real_file + len, m_url, FILENAME_LEN - len - 1);
@@ -381,8 +384,7 @@ void http_conn::unmap()
 bool http_conn::write()
 {
     int temp = 0;
-    int bytes_have_send = 0;         // 已经发送的字节
-    int bytes_to_send = m_write_idx; // 将要发送的字节 （m_write_idx）写缓冲区中待发送的字节数
+    bytes_to_send = m_write_idx; // 将要发送的字节 （m_write_idx）写缓冲区中待发送的字节数
 
     if (bytes_to_send == 0)
     {
@@ -476,6 +478,8 @@ bool http_conn::add_blank_line()
     return add_response("%s", "\r\n");
 }
 
+// 这个函数只有在发生错误时才有用
+// 当有数据要写时会直接通过内存映射来写数据
 bool http_conn::add_content(const char *content)
 {
     return add_response("%s", content);
@@ -531,6 +535,9 @@ bool http_conn::process_write(HTTP_CODE ret)
         m_iv[1].iov_base = m_file_address;
         m_iv[1].iov_len = m_file_stat.st_size;
         m_iv_count = 2;
+
+        bytes_to_send = m_write_idx + m_file_stat.st_size;
+
         return true;
     default:
         return false;
