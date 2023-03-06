@@ -32,7 +32,7 @@ private:
     // 请求队列中最多允许的，等待处理的请求数量
     int m_max_requests;
 
-    // 请求队列
+    // 请求队列，就是需要线程去处理的任务，主要进行一些数据处理操作
     std::list<T *> m_workqueue;
 
     // 互斥锁

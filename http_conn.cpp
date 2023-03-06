@@ -87,7 +87,7 @@ void http_conn::init(int sockfd, const sockaddr_in &addr)
 void http_conn::init()
 {
     bytes_to_send = 0;
-    bytes_hava_send = 0;
+    bytes_have_send = 0;
     
     m_check_state = CHECK_STATE_REQUESTLINE; // 初始状态为检查请求行
     m_linger = false;                        // 默认不保持链接  Connection : keep-alive保持连接

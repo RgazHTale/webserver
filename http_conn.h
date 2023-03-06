@@ -151,7 +151,7 @@ private:
     int m_iv_count;
 
     int bytes_to_send;      // 将要发送的数据的字节数
-    int bytes_hava_send;    // 已经发送的字节数
+    int bytes_have_send;    // 已经发送的字节数
 };
 
 #endif
