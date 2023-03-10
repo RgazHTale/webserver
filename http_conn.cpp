@@ -116,7 +116,8 @@ bool http_conn::read()
     int bytes_read = 0;
     while (true)
     {
-        // 从m_read_buf + m_read_idx索引出开始保存数据，大小是READ_BUFFER_SIZE - m_read_idx
+        // 从m_read_buf + m_read_idx索引处开始保存数据，大小是READ_BUFFER_SIZE - m_read_idx
+        // 这里是一次不能把缓冲区读满，而是因为recv每次只能读这么多数据
         bytes_read = recv(m_sockfd, m_read_buf + m_read_idx,
                           READ_BUFFER_SIZE - m_read_idx, 0);
         if (bytes_read == -1)

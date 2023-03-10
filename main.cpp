@@ -14,6 +14,8 @@
 
 #define MAX_FD 65535           // 最大文件描述符个数
 #define MAX_EVENT_NUMBER 10000 // 监听的最大的事件数量
+// 为什么fd有6w多个，而监听的数量只有1w多个？
+// 因为不是一个连接就对应一个线程，只有当连接有数据到来时才使用线程处理数据
 
 // 添加信号捕捉
 void addsig(int sig, void (*handler)(int))
@@ -25,6 +27,7 @@ void addsig(int sig, void (*handler)(int))
     sigaction(sig, &sa, NULL);
 }
 
+// 多源文件编译，
 // 添加文件描述符到epoll中
 extern int addfd(int epollfd, int fd, bool one_shot);
 // 从epoll中删除文件描述符
@@ -41,9 +44,11 @@ int main(int argc, char *argv[])
     }
 
     // 获取端口号
+    // atoi函数可以把一个字符串转换为整数
     int port = atoi(argv[1]);
 
     // 对SIGPIPE信号进行处理
+    // 可能一端已经断开，但是另外一端还在写数据就会发送一个SIGPIPE信号
     addsig(SIGPIPE, SIG_IGN);
 
     // 创建线程池，初始化线程池
@@ -52,7 +57,7 @@ int main(int argc, char *argv[])
     {
         pool = new threadpool<http_conn>;
     }
-    catch (...)
+    catch (...) // ... 能捕获所有异常对象
     {
         exit(-1);
     }
@@ -77,7 +82,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in address;
     address.sin_family = PF_INET;         // 地址族
     address.sin_addr.s_addr = INADDR_ANY; // 0.0.0.0
-    address.sin_port = htons(port);
+    address.sin_port = htons(port); // 转化为网络字节序（大端字节序）
     int ret = bind(listenfd, (struct sockaddr *)&address, sizeof(address));
     if (ret == -1)
     {
@@ -97,6 +102,7 @@ int main(int argc, char *argv[])
     // 采用epoll技术
 
     // 创建epoll对象
+    // events是传入传出参数，用于记录哪些连接有数据到来
     epoll_event events[MAX_EVENT_NUMBER];
     int epollfd = epoll_create(5);
 
@@ -143,6 +149,9 @@ int main(int argc, char *argv[])
             }
             else if (events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
             {
+                // EPOLLRDHUP 表示对方断开连接
+                // EPOLLHUP 表示读写都关闭
+                // EPOLLERR 服务器出错
                 // 对方异常断开或错误等事件发生了
                 users[sockfd].close_conn();
             }
